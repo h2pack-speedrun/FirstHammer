@@ -29,6 +29,7 @@ public.definition = {
     default  = false,
     special  = true,
     dataMutation = false,
+    modpackModule = true,
     -- stateSchema is set below after data tables are built
 }
 
