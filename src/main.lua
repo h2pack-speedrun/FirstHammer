@@ -31,7 +31,7 @@ public.definition = {
     default       = false,
     special       = true,
     dataMutation  = false,
-    modpackModule = true,
+    modpack = "h2-modpack",
     -- stateSchema is set below after data tables are built
 }
 
