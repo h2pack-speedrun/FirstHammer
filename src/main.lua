@@ -22,15 +22,15 @@ local _, revert = lib.createBackupSystem()
 -- =============================================================================
 
 public.definition = {
-    id       = "FirstHammer",
-    name     = "First Hammer Selection",
-    tabLabel = "Hammers",
-    category = "Run Modifiers",
-    group    = "Hammers",
-    tooltip  = "Select the guaranteed first hammer for each weapon aspect.",
-    default  = false,
-    special  = true,
-    dataMutation = false,
+    id            = "FirstHammer",
+    name          = "First Hammer Selection",
+    tabLabel      = "Hammers",
+    category      = "Run Modifiers",
+    group         = "Hammers",
+    tooltip       = "Select the guaranteed first hammer for each weapon aspect.",
+    default       = false,
+    special       = true,
+    dataMutation  = false,
     modpackModule = true,
     -- stateSchema is set below after data tables are built
 }
@@ -248,7 +248,7 @@ end
 
 local function GetEquippedAspect()
     local currentWeapon = CurrentRun and CurrentRun.Hero
-                        and CurrentRun.Hero.SlottedTraits and CurrentRun.Hero.SlottedTraits.Aspect or "BaseStaffAspect"
+        and CurrentRun.Hero.SlottedTraits and CurrentRun.Hero.SlottedTraits.Aspect or "BaseStaffAspect"
     return currentWeapon
 end
 
@@ -310,9 +310,9 @@ end
 -- =============================================================================
 
 local DEFAULT_LABEL_OFFSET = 0.25
-local DEFAULT_FIELD_MEDIUM  = 0.4
+local DEFAULT_FIELD_MEDIUM = 0.4
 
-local hasLocalizedLabels = false
+local hasLocalizedLabels   = false
 
 local function BuildLocalizedLabels()
     for _, data in pairs(hammerData) do
@@ -338,7 +338,9 @@ local function DrawHammerDropdown(ui, aspectKey, displayLabel, staging, onChange
     local currentId = staging.FirstHammers[aspectKey] or ""
     local currentIndex = 1
     for i, val in ipairs(data.values) do
-        if val == currentId then currentIndex = i; break end
+        if val == currentId then
+            currentIndex = i; break
+        end
     end
     local currentPreview = data.labels[currentIndex] or "None (Random)"
 
@@ -372,7 +374,8 @@ local function DrawFullHammerTab(ui, staging, onChanged, headerColor, labelOffse
         if open then
             ui.Indent()
             for _, aspectKey in ipairs(WeaponAspectMapping[weaponKey] or {}) do
-                DrawHammerDropdown(ui, aspectKey, aspectLabels[aspectKey] or aspectKey, staging, onChanged, labelOffset, fieldMedium)
+                DrawHammerDropdown(ui, aspectKey, aspectLabels[aspectKey] or aspectKey, staging, onChanged, labelOffset,
+                    fieldMedium)
             end
             ui.Unindent()
         end
@@ -383,7 +386,8 @@ local function DrawQuickSelect(ui, staging, onChanged, labelOffset, fieldMedium)
     local currentWeapon = GetEquippedAspect()
     local weaponNameLabel = aspectLabels[currentWeapon] or "Unknown Weapon"
     if hammerData[currentWeapon] then
-        DrawHammerDropdown(ui, currentWeapon, "Equipped: " .. weaponNameLabel, staging, onChanged, labelOffset, fieldMedium)
+        DrawHammerDropdown(ui, currentWeapon, "Equipped: " .. weaponNameLabel, staging, onChanged, labelOffset,
+            fieldMedium)
     end
 end
 
@@ -409,19 +413,20 @@ local staging, snapshotStaging, syncToConfig =
 -- PUBLIC API (generic special module contract)
 -- =============================================================================
 
-public.definition.apply = apply
-public.definition.revert = revert
+public.definition.apply                      = apply
+public.definition.revert                     = revert
 
-public.SnapshotStaging    = snapshotStaging
-public.SyncToConfig       = syncToConfig
+public.SnapshotStaging                       = snapshotStaging
+public.SyncToConfig                          = syncToConfig
 
 --- Draw the full tab content (Core renders the enable checkbox above this).
 function public.DrawTab(ui, onChanged, theme)
     local colors      = theme and theme.colors
-    local headerColor = (colors and colors.info) or {1, 1, 1, 1}
+    local headerColor = (colors and colors.info) or { 1, 1, 1, 1 }
     local fieldMedium = (theme and theme.FIELD_MEDIUM) or DEFAULT_FIELD_MEDIUM
     ui.Spacing()
-    ui.TextColored(headerColor[1], headerColor[2], headerColor[3], headerColor[4], "Select the guaranteed first hammer for each aspect.")
+    ui.TextColored(headerColor[1], headerColor[2], headerColor[3], headerColor[4],
+        "Select the guaranteed first hammer for each aspect.")
     ui.Spacing()
     DrawFullHammerTab(ui, staging, onChanged, headerColor, DEFAULT_LABEL_OFFSET, fieldMedium)
 end
