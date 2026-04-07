@@ -184,41 +184,91 @@ internal.weaponAspectMapping = {
     WeaponSuit = { "BaseSuitAspect", "SuitMarkCritAspect", "SuitHexAspect", "SuitComboAspect" },
 }
 
-for weaponName, aspects in pairs(internal.weaponAspectMapping) do
-    local baseWeaponData = internal.hammerData[weaponName]
-    for _, aspectName in ipairs(aspects) do
-        internal.hammerData[aspectName] = baseWeaponData
-    end
-end
-
-for _, weaponName in ipairs(internal.weaponDrawOrder) do
-    local data = internal.hammerData[weaponName]
-    data.valueIndex = {}
-    for i, v in ipairs(data.values) do
-        data.valueIndex[v] = i
-    end
-end
-
-internal.aspectDrawOrder = {}
-internal.hammerPaths = {}
-for _, weaponName in ipairs(internal.weaponDrawOrder) do
-    local aspects = internal.weaponAspectMapping[weaponName]
-    if aspects then
+local function AttachAspectHammerData()
+    for weaponName, aspects in pairs(internal.weaponAspectMapping) do
+        local baseWeaponData = internal.hammerData[weaponName]
         for _, aspectName in ipairs(aspects) do
-            table.insert(internal.aspectDrawOrder, aspectName)
-            internal.hammerPaths[aspectName] = { "FirstHammers", aspectName }
+            internal.hammerData[aspectName] = baseWeaponData
         end
     end
 end
 
-public.definition.stateSchema = {}
-for _, aspectKey in ipairs(internal.aspectDrawOrder) do
-    table.insert(public.definition.stateSchema, {
-        type = "dropdown",
-        configKey = { "FirstHammers", aspectKey },
-        values = internal.hammerData[aspectKey].values,
-        default = "",
-    })
+local function FinalizeWeaponHammerData()
+    for _, weaponName in ipairs(internal.weaponDrawOrder) do
+        local data = internal.hammerData[weaponName]
+        data.valueIndex = {}
+        data.displayValues = {}
+        for i, v in ipairs(data.values) do
+            data.valueIndex[v] = i
+            if v == "" then
+                data.displayValues[v] = "None (Random)"
+            else
+                data.displayValues[v] = v
+            end
+        end
+    end
+end
+
+local function BuildDefinitionStorageAndUi()
+    local storage = {}
+    local ui = {}
+
+    for _, weaponName in ipairs(internal.weaponDrawOrder) do
+        local groupNode = {
+            type = "group",
+            label = internal.weaponLabels[weaponName] or weaponName,
+            collapsible = true,
+            defaultOpen = false,
+            children = {},
+        }
+
+        for _, aspectName in ipairs(internal.weaponAspectMapping[weaponName] or {}) do
+            local hammerOptions = internal.hammerData[aspectName]
+            table.insert(storage, {
+                type = "string",
+                alias = aspectName,
+                configKey = { "FirstHammers", aspectName },
+                default = "",
+            })
+            table.insert(groupNode.children, {
+                type = "dropdown",
+                binds = { value = aspectName },
+                quick = true,
+                quickId = aspectName,
+                label = internal.aspectLabels[aspectName] or aspectName,
+                values = hammerOptions.values,
+                displayValues = hammerOptions.displayValues,
+                tooltip = "Guaranteed first hammer for this aspect. Leave on None (Random) to keep vanilla behavior.",
+            })
+        end
+
+        if #groupNode.children > 0 then
+            table.insert(ui, groupNode)
+        end
+    end
+
+    public.definition.storage = storage
+    public.definition.ui = ui
+end
+
+AttachAspectHammerData()
+FinalizeWeaponHammerData()
+BuildDefinitionStorageAndUi()
+
+function internal.LocalizeHammerLabels()
+    if internal._hasLocalizedHammerLabels then
+        return
+    end
+    for _, weaponName in ipairs(internal.weaponDrawOrder) do
+        local data = internal.hammerData[weaponName]
+        for _, internalString in ipairs(data.values) do
+            if internalString ~= "" then
+                local localizedName = GetDisplayName({ Text = internalString })
+                data.displayValues[internalString] = localizedName or internalString
+            end
+        end
+    end
+    internal._hasLocalizedHammerLabels = true
 end
 
 function internal.GetEquippedAspect()
@@ -228,6 +278,10 @@ function internal.GetEquippedAspect()
 end
 
 local hasForcedHammerThisRun = false
+
+public.definition.selectQuickUi = function()
+    return { internal.GetEquippedAspect() }
+end
 
 function internal.RegisterHooks()
     modutil.mod.Path.Wrap("StartNewRun", function(baseFunc, prevRun, args)
@@ -244,7 +298,7 @@ function internal.RegisterHooks()
         if lootData.Name ~= "WeaponUpgrade" or hasForcedHammerThisRun then return end
 
         local currentWeapon = internal.GetEquippedAspect()
-        local desiredHammer = store.read({ "FirstHammers", currentWeapon })
+        local desiredHammer = store.read(currentWeapon)
 
         if desiredHammer and desiredHammer ~= "" then
             local traitData = TraitData[desiredHammer]
@@ -263,7 +317,7 @@ function internal.RegisterHooks()
         local traitName = args.TraitData and args.TraitData.Name
         if traitName then
             local currentWeapon = internal.GetEquippedAspect()
-            local desiredHammer = store.read({ "FirstHammers", currentWeapon })
+            local desiredHammer = store.read(currentWeapon)
             if desiredHammer == traitName then
                 hasForcedHammerThisRun = true
             end
