@@ -212,6 +212,10 @@ end
 local function BuildDefinitionStorageAndUi()
     local storage = {}
     local ui = {}
+    local dropdownGeometry = {
+        controlStart = 220,
+        controlWidth = 400,
+    }
 
     for _, weaponName in ipairs(internal.weaponDrawOrder) do
         local groupNode = {
@@ -236,6 +240,7 @@ local function BuildDefinitionStorageAndUi()
                 quick = true,
                 quickId = aspectName,
                 label = internal.aspectLabels[aspectName] or aspectName,
+                geometry = dropdownGeometry,
                 values = hammerOptions.values,
                 displayValues = hammerOptions.displayValues,
                 tooltip = "Guaranteed first hammer for this aspect. Leave on None (Random) to keep vanilla behavior.",
