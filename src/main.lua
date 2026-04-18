@@ -17,37 +17,68 @@ FirstHammerInternal = FirstHammerInternal or {}
 local internal = FirstHammerInternal
 
 public.definition = {
-    id = "FirstHammer",
-    name = "Hammer Selection",
-    shortName = "Current Hammer",
-    category = "Hammer Selection",
-    tooltip = "Select the guaranteed first hammer for each weapon aspect.",
-    default = dataDefaults.Enabled,
+    id             = "FirstHammer",
+    name           = "Hammer Selection",
+    shortName      = "Hammer Selection",
+    tooltip        = "Select the guaranteed first hammer for each weapon aspect.",
+    default        = dataDefaults.Enabled,
     affectsRunData = false,
-    modpack = "speedrun",
+    modpack        = "speedrun",
 }
 
-import 'data.lua'
+public.store = nil
+store = nil
+internal.standaloneUi = nil
 
-public.store = lib.store.create(config, public.definition, dataDefaults)
-store = public.store
+local function registerHooks()
+    if internal.LocalizeHammerLabels then
+        internal.LocalizeHammerLabels()
+    end
+    if internal.RegisterHooks then
+        internal.RegisterHooks()
+    end
+    public.DrawTab = internal.DrawTab
+    public.DrawQuickContent = internal.DrawQuickContent
+end
 
 local loader = reload.auto_single()
 
 local function init()
     import_as_fallback(rom.game)
-    if internal.LocalizeHammerLabels then
-        internal.LocalizeHammerLabels()
-    end
-    internal.RegisterHooks()
+    import("data.lua")
+    import("ui.lua")
+    public.store = lib.store.create(config, public.definition, dataDefaults)
+    store = public.store
+    registerHooks()
     if lib.coordinator.isEnabled(store, public.definition.modpack) then
         lib.mutation.apply(public.definition, store)
     end
+    internal.standaloneUi = lib.host.standaloneUI(
+        public.definition,
+        store,
+        store.uiState,
+        {
+            getDrawTab = function()
+                return public.DrawTab
+            end,
+        }
+    )
 end
 
 modutil.once_loaded.game(function()
     loader.load(init, init)
 end)
 
-local uiCallback = lib.coordinator.standaloneUI(public.definition, store)
-rom.gui.add_to_menu_bar(uiCallback)
+---@diagnostic disable-next-line: redundant-parameter
+rom.gui.add_imgui(function()
+    if internal.standaloneUi and internal.standaloneUi.renderWindow then
+        internal.standaloneUi.renderWindow()
+    end
+end)
+
+---@diagnostic disable-next-line: redundant-parameter
+rom.gui.add_to_menu_bar(function()
+    if internal.standaloneUi and internal.standaloneUi.addMenuBar then
+        internal.standaloneUi.addMenuBar()
+    end
+end)

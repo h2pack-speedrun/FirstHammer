@@ -209,70 +209,39 @@ local function FinalizeWeaponHammerData()
     end
 end
 
-local function BuildDefinitionStorageAndUi()
+local function BuildDefinitionStorage()
     local storage = {}
-    local ui = {
-        type = "vstack",
-        gap = 8,
-        children = {},
-    }
 
     for _, weaponName in ipairs(internal.weaponDrawOrder) do
-        local groupNode = {
-            type = "collapsible",
-            label = internal.weaponLabels[weaponName] or weaponName,
-            defaultOpen = false,
-            children = {},
-        }
-
         for _, aspectName in ipairs(internal.weaponAspectMapping[weaponName] or {}) do
-            local hammerOptions = internal.hammerData[aspectName]
             table.insert(storage, {
                 type = "string",
                 alias = aspectName,
                 configKey = { "FirstHammers", aspectName },
                 default = "",
             })
-            table.insert(groupNode.children, {
-                type = "dropdown",
-                binds = { value = aspectName },
-                quick = true,
-                quickId = aspectName,
-                label = internal.aspectLabels[aspectName] or aspectName,
-                controlWidth = 400,
-                values = hammerOptions.values,
-                displayValues = hammerOptions.displayValues,
-                tooltip = "Guaranteed first hammer for this aspect. Leave on None (Random) to keep vanilla behavior.",
-            })
-        end
-
-        if #groupNode.children > 0 then
-            table.insert(ui.children, groupNode)
         end
     end
 
     public.definition.storage = storage
-    public.definition.ui = ui
 end
 
 AttachAspectHammerData()
 FinalizeWeaponHammerData()
-BuildDefinitionStorageAndUi()
+BuildDefinitionStorage()
 
 function internal.LocalizeHammerLabels()
-    if internal._hasLocalizedHammerLabels then
-        return
-    end
     for _, weaponName in ipairs(internal.weaponDrawOrder) do
         local data = internal.hammerData[weaponName]
         for _, internalString in ipairs(data.values) do
             if internalString ~= "" then
-                local localizedName = GetDisplayName({ Text = internalString })
+                local traitData = TraitData and TraitData[internalString] or nil
+                local textKey = traitData and traitData.Name or internalString
+                local localizedName = game.GetDisplayName({ Text = textKey })
                 data.displayValues[internalString] = localizedName or internalString
             end
         end
     end
-    internal._hasLocalizedHammerLabels = true
 end
 
 function internal.GetEquippedAspect()
@@ -282,10 +251,6 @@ function internal.GetEquippedAspect()
 end
 
 local hasForcedHammerThisRun = false
-
-public.definition.selectQuickUi = function()
-    return { internal.GetEquippedAspect() }
-end
 
 function internal.RegisterHooks()
     modutil.mod.Path.Wrap("StartNewRun", function(baseFunc, prevRun, args)
@@ -330,3 +295,5 @@ function internal.RegisterHooks()
         return baseFunc(args)
     end)
 end
+
+return internal
