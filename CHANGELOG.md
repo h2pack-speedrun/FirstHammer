@@ -1,9 +1,5 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-
 ## [Unreleased]
 
 ### Changed
@@ -11,4 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Moved game hooks to the ModpackLib hook contract for reload-safe registration.
 - Hardened GitHub Actions so Lua validation runs before releases.
 
-[unreleased]: https://github.com/h2pack-speedrun/adamant-Speedrun_FirstHammer/compare/3ff2ba324f4af2db83864e9ea671aca9567babaa...HEAD
+## [1.0.0] - 2026-04-21
+
+Initial release
+
+[unreleased]: https://github.com/h2pack-speedrun/adamant-Speedrun_FirstHammer/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/h2pack-speedrun/adamant-Speedrun_FirstHammer/compare/3ff2ba324f4af2db83864e9ea671aca9567babaa...1.0.0
